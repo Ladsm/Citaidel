@@ -14,8 +14,12 @@ inline void programRun(const std::string& command) {
         full_command = "konsole --hold -e \"" + command + "\"";
         result = std::system(full_command.c_str());
     }
-    if (result != 0) {
+    else if (result != 0) {
         full_command = "xterm -hold -e \"" + command + "\"";
+        std::system(full_command.c_str());
+    }
+    else if (result != 0) {
+        full_command = "kitty --hold -e \"" + command + "\"";
         std::system(full_command.c_str());
     }
 #else

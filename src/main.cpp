@@ -124,7 +124,7 @@ public:
                 fullContent += "\n";
             }
         }
-        std::filesystem::path targetPath = filePath.empty() ? filename : filePath;
+        std::filesystem::path targetPath = filePath.empty() ? std::filesystem::path(filename) : filePath;
         fflib::create_file(targetPath, fullContent);
     }
 
@@ -137,11 +137,13 @@ public:
 class Files : public Window {
     std::filesystem::path currentPath = fflib::current_path();
     std::filesystem::path pendingPath = "";
+    bool needsRefresh = false;
     Label* PathLabel = nullptr;
     VerticalContainer* fileListContainer;
 public:
     void changeDirectory(const std::filesystem::path& newPath) {
         pendingPath = newPath;
+        needsRefresh = true;
     }
 
     void fileList() {
@@ -149,9 +151,11 @@ public:
         fileListContainer->x = 2;
         fileListContainer->y = 2;
         fileListContainer->spacing = 0;
-        fileListContainer->Add<Button>("Fource Refresh", [this]() {
-            fileList();
+
+        fileListContainer->Add<Button>("Force Refresh", [this]() {
+            needsRefresh = true;
             });
+
         if (currentPath.has_parent_path()) {
             fileListContainer->Add<Button>("..", [this]() {
                 changeDirectory(currentPath.parent_path());
@@ -167,7 +171,7 @@ public:
                 auto& row = fileListContainer->Add<HorizontalContainer>();
                 row.Add<Button>("Delete", [this, fullPath]() {
                     fflib::rm_rf(fullPath);
-                    changeDirectory(currentPath);
+                    needsRefresh = true;
                     });
                 row.Add<Button>("  Open   ", [this, fullPath]() {
                     changeDirectory(fullPath);
@@ -179,7 +183,7 @@ public:
                 auto& row = fileListContainer->Add<HorizontalContainer>();
                 row.Add<Button>("Delete", [this, fullPath]() {
                     fflib::rm(fullPath);
-                    changeDirectory(currentPath);
+                    needsRefresh = true;
                     });
                 row.Add<Button>("edit file", [fullPath]() {
                     auto editor = mksharedWindow<textEditor>(fullPath);
@@ -189,6 +193,7 @@ public:
             }
         }
     }
+
     Files() : Window("Files", 75, 30, winpal) {
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         PathLabel = &vbox.Add<Label>("");
@@ -196,13 +201,20 @@ public:
         fileListContainer = &vbox.Add<VerticalContainer>();
         fileList();
     }
+
     void Draw(std::ostream& buffer) override {
         if (!pendingPath.empty()) {
             currentPath = pendingPath;
             pendingPath.clear();
             fflib::cd(currentPath);
-            fileList();
+            needsRefresh = true;
         }
+
+        if (needsRefresh) {
+            fileList();
+            needsRefresh = false;
+        }
+
         if (PathLabel) {
             PathLabel->text = "Files of: " + currentPath.string();
         }
