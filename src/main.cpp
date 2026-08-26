@@ -223,9 +223,42 @@ public:
     }
 };
 
+class projectFileManager : public Window {
+    std::string filename = "";
+
+    bool isHeader = false;
+    bool isBoth = false;
+public:
+    projectFileManager() : Window("Project File Manager", 50, 19, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        auto& hbox = vbox.Add<HorizontalContainer>();
+        hbox.Add<Label>("Filename: ");
+        hbox.Add<TextInput>(20, &filename);
+        vbox.Add<Label>("(dont add file extention)");
+        auto& hbox2 = vbox.Add<HorizontalContainer>();
+        hbox2.Add<Toggle>("is header", isHeader);
+        hbox2.Add<Toggle>("is header and cpp", isBoth);
+        vbox.Add<Separator>();
+        vbox.Add<Button>("Add", [this]() {
+
+            });
+        vbox.Add<Separator>();
+        vbox.Add<Button>("Remove", [this]() {
+
+            });
+    }
+    void Draw(std::ostream& buffer) override {
+        if (isBoth) {
+            isHeader = true;
+        }
+        Window::Draw(buffer);
+    }
+};
+
 int main() {
     auto start = startmenu<StartMenuWindow>(&wm, winpal);
     start->AddItem<projectManager>("Project Manager");
+    start->AddItem<projectFileManager>("Project File Manager");
     start->AddItem<Files>("Files");
     start->AddItem<textEditor>("Text Editor");
     wm.SetStartMenu(start);
