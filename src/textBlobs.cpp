@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BIN_SOURCES
     src/main.cpp
-    #CGEN_ANCHOR
+    #CITAIDEL_ANCHOR
 )
 add_executable(${PROJECT_NAME} ${BIN_SOURCES})
 target_precompile_headers(${PROJECT_NAME} PRIVATE include/pch.h)
@@ -32,7 +32,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(LIB_SOURCES
     src/lib.cpp
-    #CGEN_ANCHOR
+    #CITAIDEL_ANCHOR
 )
 add_library(${PROJECT_NAME} STATIC ${LIB_SOURCES})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

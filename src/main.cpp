@@ -1,6 +1,7 @@
 #include <iostream>
 #include "pch.h"
 #include "projectManager.hpp"
+#include "projectFileManager.hpp"
 
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
@@ -240,18 +241,25 @@ public:
         hbox2.Add<Toggle>("is header and cpp", isBoth);
         vbox.Add<Separator>();
         vbox.Add<Button>("Add", [this]() {
-
+            fileAdd(&wm, filename, isHeader, isBoth);
             });
         vbox.Add<Separator>();
         vbox.Add<Button>("Remove", [this]() {
-
+            fileRemove(&wm, filename, isHeader, isBoth);
             });
     }
     void Draw(std::ostream& buffer) override {
-        if (isBoth) {
-            isHeader = true;
-        }
         Window::Draw(buffer);
+    }
+};
+
+class ShellWindow : public Window {
+public:
+    ShellWindow() : Window("Terminal", 80, 24, winpal) {}
+    static std::shared_ptr<ShellWindow> Create() {
+        auto win = std::make_shared<ShellWindow>();
+        win->Add<ShellWidget>(1, 1, win);
+        return win;
     }
 };
 
@@ -260,6 +268,7 @@ int main() {
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
     start->AddItem<Files>("Files");
+    start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
     wm.SetStartMenu(start);
     wm.AddWindow(start);
