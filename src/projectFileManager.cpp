@@ -35,7 +35,7 @@ void fileAdd(WindowManager* wmp, std::string filename, bool header, bool both) {
 		}
 
 		if (fflib::cd("src")) {
-			if (fflib::touch(filename + ".hpp", "#include \"" + filename + ".hpp\"\n\n")) {
+			if (fflib::touch(filename + ".cpp", "#include \"" + filename + ".hpp\"\n\n")) {
 				createdCpp = true;
 			};
 			fflib::cddotdot();
@@ -43,6 +43,7 @@ void fileAdd(WindowManager* wmp, std::string filename, bool header, bool both) {
 		else {
 			wmp->Alert("No src folder in directory");
 		}
+
 	}
 
 	else {
