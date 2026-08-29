@@ -95,6 +95,7 @@ class textEditor : public Window {
     std::vector<std::string> text = { "" };
     std::string filename = "file.cpp";
     std::filesystem::path filePath;
+    LargeTextInput* textInput = nullptr;
 
 public:
     textEditor(const std::filesystem::path& pathToOpen = "")
@@ -106,7 +107,7 @@ public:
         }
 
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
-        vbox.Add<LargeTextInput>(20, 56, &text, true);
+        textInput = &vbox.Add<LargeTextInput>(20, 56, &text, true);
         vbox.Add<Separator>();
 
         auto& hbox = vbox.Add<HorizontalContainer>();
@@ -131,6 +132,8 @@ public:
 
     void Draw(std::ostream& buffer) override {
         title = "Text Editor - editing: " + filename;
+        textInput->width = width - 10;
+        textInput->height = height - 10;
         Window::Draw(buffer);
     }
 };
