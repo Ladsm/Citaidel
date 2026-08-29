@@ -324,6 +324,10 @@ public:
         bool currentState = inGitDirectory();
 
         if (currentState != lastGitState) {
+            if (lastGitState == true) {
+                startHeight = 10;
+                height = 10;
+            }
             lastGitState = currentState;
             VCGitSet();
         }
