@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "projectManager.hpp"
 #include "projectFileManager.hpp"
+#include "git.hpp"
 
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
@@ -256,6 +257,93 @@ public:
     }
 };
 
+class gitWindow : public Window {
+    std::vector<std::string> text = { "" };
+    std::string cloneUrl = "https://github.com/";
+    LargeTextInput* textInput = nullptr;
+    VerticalContainer* VCGit = nullptr;
+    bool lastGitState = false;
+
+    bool inGitDirectory() {
+        return fflib::exists(".git");
+    }
+
+    void VCGitSet() {
+        VCGit->children.clear();
+        textInput = nullptr;
+
+        if (!inGitDirectory()) {
+            VCGit->Add<Button>("Initialize git repository", [this]() {
+                gitInit(&wm);
+                });
+
+            auto& cloneRow = VCGit->Add<HorizontalContainer>();
+            cloneRow.Add<Label>("URL: ");
+            cloneRow.Add<TextInput>(60, &cloneUrl);
+            VCGit->Add<Button>("Clone", [this]() {
+                gitClone(&wm, cloneUrl);
+                });
+        }
+        else {
+            VCGit->Add<Label>("Commit Message");
+            textInput = &VCGit->Add<LargeTextInput>(6, 40, &text, false);
+            auto& actionRow = VCGit->Add<HorizontalContainer>();
+            actionRow.Add<Button>("Commit All", [this]() {
+                std::string fullMsg;
+                for (size_t i = 0; i < text.size(); ++i) {
+                    fullMsg += text[i] + (i + 1 < text.size() ? "\n" : "");
+                }
+                gitCommitAll(&wm, fullMsg);
+                });
+
+            actionRow.Add<Button>("Fetch", [this]() {
+                gitFetch(&wm, "origin");
+                });
+
+            actionRow.Add<Button>("Pull", [this]() {
+                gitPull(&wm, "origin", "main");
+                });
+
+            actionRow.Add<Button>("Push to Origin", [this]() {
+                gitPushToOrigin(&wm, "main");
+                });
+        }
+    }
+
+public:
+    gitWindow() : Window("Git Manager", 65, 10, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        VCGit = &vbox.Add<VerticalContainer>();
+        VCGit->spacing = 1;
+
+        lastGitState = inGitDirectory();
+        VCGitSet();
+    }
+
+    void Draw(std::ostream& buffer) override {
+        bool currentState = inGitDirectory();
+
+        if (currentState != lastGitState) {
+            lastGitState = currentState;
+            VCGitSet();
+        }
+
+        if (inGitDirectory()) {
+            startHeight = 15;
+            if (height < 20) {
+                height = 15;
+            }
+        }
+
+        if (textInput) {
+            textInput->width = width - 10;
+            textInput->height = height - 10;
+        }
+
+        Window::Draw(buffer);
+    }
+};
+
 class ShellWindow : public Window {
 public:
     ShellWindow() : Window("Terminal", 80, 24, winpal) {}
@@ -270,6 +358,7 @@ int main() {
     auto start = startmenu<StartMenuWindow>(&wm, winpal);
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
+    start->AddItem<gitWindow>("Git Manager");
     start->AddItem<Files>("Files");
     start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
