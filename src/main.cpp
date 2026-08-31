@@ -4,6 +4,9 @@
 #include "projectFileManager.hpp"
 #include "git.hpp"
 
+#define CITAIDEL_VERSION 1.0.0
+#define CITAIDEL_VERSION_TEXT "1.0.0"
+
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
     "\033[38;2;255;255;255;48;2;18;18;18m",
@@ -25,6 +28,29 @@ enum class projectType {
     library
 };
 
+std::vector<std::string> cilogo = {
+    "  ███ █ █████ ████ █ ██  ███ █    ",
+    "  █       █   █  █   █ █ █   █    ",
+    "  █   █   █   ████ █ █ █ ███ █    ",
+    "  █   █   █   █  █ █ █ █ █   █    ",
+    "  ███ █   █   █  █ █ ██  ███ ███  "
+};
+
+class aboutWindow : public Window {
+public:
+    aboutWindow() : Window("About", 40, 19, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        vbox.Add<TextBox>(cilogo);
+        vbox.Add<Label>("C/C++ IDE built in Lad-in-the-Window");
+        auto& hbox = vbox.Add<HorizontalContainer>();
+        hbox.Add<Label>(CITAIDEL_VERSION_TEXT);
+        hbox.Add<Label>("From Ladsm");
+        hbox.Add<Label>("31/8/2026");
+        vbox.Add<Label>("https://github.com/Ladsm/Citaidel");
+        vbox.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
+    }
+};
+
 class projectManager : public Window {
     std::string projectName = "";
     projectType pt = projectType::binary;
@@ -32,24 +58,23 @@ class projectManager : public Window {
     Label* projectLabel = nullptr;
     Label* projectTypeLabel = nullptr;
 public:
-    projectManager() : Window("Project Manager", 40, 20, winpal) {
+    projectManager() : Window("Project Manager", 56, 19, winpal) {
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         projectLabel = &vbox.Add<Label>("Project: ");
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Label>("Change project name ");
-        hbox.Add<TextInput>(10, &projectName);
+        hbox.Add<TextInput>(26, &projectName);
         projectTypeLabel = &vbox.Add<Label>("");
         vbox.Add<Toggle>("Change project type", projectTypeBool);
         vbox.Add<Separator>();
         auto& hbox2 = vbox.Add<HorizontalContainer>();
         hbox2.Add<Button>("Init", [this]() { init(projectTypeBool, projectName, &wm); });
         hbox2.Add<Button>("clean build folder", [this]() { clean(&wm); });
+        hbox2.Add<Button>("build", [this]() { build(&wm); });
+        hbox2.Add<Button>("run", [this]() { run(&wm); });
         auto& hbox3 = vbox.Add<HorizontalContainer>();
-        hbox3.Add<Button>("build", [this]() { build(&wm); });
-        hbox3.Add<Button>("run", [this]() { run(&wm); });
-        auto& hbox4 = vbox.Add<HorizontalContainer>();
-        hbox4.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
-        hbox4.Add<Button>("Exit Citaidel", [this]() { wm.exit(0); });
+        hbox3.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
+        hbox3.Add<Button>("Exit Citaidel", [this]() { wm.exit(0); });
     }
 
     void Draw(std::ostream& buffer) override {
@@ -366,6 +391,7 @@ int main() {
     start->AddItem<Files>("Files");
     start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
+    start->AddItem<aboutWindow>("About");
     wm.SetStartMenu(start);
     wm.AddWindow(start);
     wm.Run();
