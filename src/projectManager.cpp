@@ -3,25 +3,35 @@
 #include "textBlobs.hpp"
 #include "pch.h"
 
+static bool ensure_project_root(WindowManager* wmp) {
+	if (fflib::exists("CMakeLists.txt")) {
+		return true;
+	}
+	if (fflib::exists("../CMakeLists.txt")) {
+		fflib::cddotdot();
+		return true;
+	}
+	wmp->Alert("No CMakeLists.txt found in current or parent directory.");
+	return false;
+}
+
 void init(bool isLibrary, std::string name, WindowManager* wmp) {
 	if (name == "") {
 		wmp->Alert("Project name is blank!");
 		return;
 	}
-	if (fflib::exists("CMakeLists.txt")) {
+	if (fflib::exists("CMakeLists.txt") || fflib::exists("../CMakeLists.txt")) {
 		wmp->Alert("Cant create project, if inside one already.");
 		return;
 	}
 	fflib::mkdir(name);
 	fflib::cd(name);
-	std::string mainfile = R"(
-#include <iostream>
+	std::string mainfile = R"(#include <iostream>
 
 int main() {
     std::cout << "Hello, World!\n";
     return 0;
-}
-)";
+})";
 	if (!isLibrary) {
 		fflib::touch("CMakeLists.txt", make_binary(name));
 		fflib::mkdir("src");
@@ -46,37 +56,34 @@ int main() {
 		);
 		fflib::cddotdot();
 		fflib::cd("demo");
-		fflib::touch("demo.cpp", R"(
-#include "lib.hpp"
+		fflib::touch("demo.cpp", R"(#include "lib.hpp"
 
 int main() {
 	printtest();
 	return 0;
-}
-)");
+})");
 		fflib::cddotdot();
 		fflib::cd("include");
 		fflib::touch("lib.hpp", "#pragma once\nvoid printtest();");
 		fflib::touch("pch.h", "#pragma once\n//add headers here...");
 		fflib::cddotdot();
 		fflib::cd("src");
-		fflib::touch("lib.cpp", R"(
-#include <iostream>
+		fflib::touch("lib.cpp", R"(#include <iostream>
 
 void printtest() {
 	std::cout << "Library working!\n";
 	return;
-}
-)");
+})");
 		fflib::cddotdot();
 	}
 	return;
 }
 
 void clean(WindowManager* wmp) {
-	if (!fflib::exists("CMakeLists.txt")) {
-		wmp->Alert("No CMakeLists.txt in directory");
+	if (!ensure_project_root(wmp)) {
+		return;
 	}
+
 	if (fflib::exists("build")) {
 		fflib::rm_rf("build");
 	}
@@ -86,9 +93,10 @@ void clean(WindowManager* wmp) {
 }
 
 void build(WindowManager* wmp) {
-	if (!fflib::exists("CMakeLists.txt")) {
-		wmp->Alert("No CMakeLists.txt in directory");
+	if (!ensure_project_root(wmp)) {
+		return;
 	}
+
 	if (!fflib::exists("build")) {
 		fflib::mkdir("build");
 	}
@@ -104,8 +112,13 @@ void build(WindowManager* wmp) {
 }
 
 void run(WindowManager* wmp) {
+	if (!ensure_project_root(wmp)) {
+		return;
+	}
+
 	if (!fflib::exists("build")) {
 		wmp->Alert("No build directory found, try building first");
+		return;
 	}
 	std::string full_path = fflib::current_path();
 	size_t last_slash = full_path.find_last_of("/\\");
