@@ -4,8 +4,8 @@
 #include "projectFileManager.hpp"
 #include "git.hpp"
 
-#define CITAIDEL_VERSION 1.0.0
-#define CITAIDEL_VERSION_TEXT "1.0.0"
+#define CITAIDEL_VERSION 1.1.0
+#define CITAIDEL_VERSION_TEXT "1.1.0"
 
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
@@ -30,11 +30,11 @@ enum class projectType {
 
 class aboutWindow : public Window {
     std::vector<std::string> cilogo = {
-    "  ███ █ █████ ████ █ ██  ███ █    ",
+    "  ▟██ █ █████ ▟██▙ █ ██▙ ███ █    ",
     "  █       █   █  █   █ █ █   █    ",
     "  █   █   █   ████ █ █ █ ███ █    ",
     "  █   █   █   █  █ █ █ █ █   █    ",
-    "  ███ █   █   █  █ █ ██  ███ ███  "
+    "  ▜██ █   █   █  █ █ ██▛ ███ ███  "
     };
     std::vector<std::string> info = {
         "C/C++ IDE built in Lad-in-the-Window.",

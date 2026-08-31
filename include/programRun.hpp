@@ -6,7 +6,7 @@ inline void programRun(const std::string& command) {
 #if defined(_WIN32) || defined(_WIN64)
     std::string full_command = "start cmd /K \"" + command + "\"";
     std::system(full_command.c_str());
-#elif defined(__linux__)
+#else
     std::string full_command = "gnome-terminal -- bash -c \"" + command + "; exec bash\"";
     int result = std::system(full_command.c_str());
 
@@ -22,7 +22,5 @@ inline void programRun(const std::string& command) {
         full_command = "kitty --hold -e \"" + command + "\"";
         std::system(full_command.c_str());
     }
-#else
-#error Platform not supported
 #endif
 }
