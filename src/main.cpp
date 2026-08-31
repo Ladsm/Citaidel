@@ -28,20 +28,25 @@ enum class projectType {
     library
 };
 
-std::vector<std::string> cilogo = {
+class aboutWindow : public Window {
+    std::vector<std::string> cilogo = {
     "  ███ █ █████ ████ █ ██  ███ █    ",
     "  █       █   █  █   █ █ █   █    ",
     "  █   █   █   ████ █ █ █ ███ █    ",
     "  █   █   █   █  █ █ █ █ █   █    ",
     "  ███ █   █   █  █ █ ██  ███ ███  "
-};
-
-class aboutWindow : public Window {
+    };
+    std::vector<std::string> info = {
+        "C/C++ IDE built in Lad-in-the-Window.",
+        "Uses CMake to build and has Git",
+        "intergrateion."
+    };
 public:
-    aboutWindow() : Window("About", 40, 19, winpal) {
+    aboutWindow() : Window("About", 41, 21, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(cilogo);
-        vbox.Add<Label>("C/C++ IDE built in Lad-in-the-Window");
+        vbox.Add<TextBox>(info);
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Label>(CITAIDEL_VERSION_TEXT);
         hbox.Add<Label>("From Ladsm");
