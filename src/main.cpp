@@ -43,7 +43,6 @@ class aboutWindow : public Window {
     };
 public:
     aboutWindow() : Window("About", 41, 21, winpal) {
-        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(cilogo);
         vbox.Add<TextBox>(info);
