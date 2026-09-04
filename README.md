@@ -39,7 +39,13 @@ Click init and It will create a new project folder with folders and CMakeLists.t
 
 #### Building and Running
 
-To build or run a Citaidel project, you must be in a folder with CMakeLists.txt or with CMakeLists.txt in the parent directory.
+To build or run a Citaidel project, you must be in a folder with CMakeLists.txt or with CMakeLists.txt in the parent directory.  
+When running on Linux, these are the supported terminals:
+
+ - gnome-terminal
+ - konsole
+ - xterm
+ - kitty
 
 ### Git Manager
 
