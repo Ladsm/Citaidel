@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "projectManager.hpp"
 #include "projectFileManager.hpp"
+#include "headerLibrariesAdd.hpp"
 #include "git.hpp"
 
 #define CITAIDEL_VERSION 1.1.0
@@ -387,12 +388,35 @@ public:
     }
 };
 
+class headerLibrariesWindow : public Window {
+    std::vector<std::string> text = {
+        "This window is for large header only files.",
+        "The only files right now are:",
+        "mktui.h - TUI builder",
+        "fflib - simple file library",
+    };
+public:
+    headerLibrariesWindow() : Window("Header Libraries Add", 50, 14, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        vbox.Add<TextBox>(text);
+        vbox.Add<Separator>();
+        auto& hbox = vbox.Add<HorizontalContainer>();
+        hbox.Add<Button>("mktui.h", [this](){
+        		createMktui(&wm);
+        });
+        hbox.Add<Button>("fflib.hpp", [this](){
+        		createFflib(&wm);
+        });
+    }
+};
+
 int main() {
     auto start = startmenu<StartMenuWindow>(&wm, winpal);
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
     start->AddItem<gitWindow>("Git Manager");
     start->AddItem<Files>("Files");
+    start->AddItem<headerLibrariesWindow>("Header Libraries Add");
     start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
     start->AddItem<aboutWindow>("About");

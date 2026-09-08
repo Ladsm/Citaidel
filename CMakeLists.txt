@@ -9,6 +9,7 @@ set(BIN_SOURCES
     src/projectFileManager.cpp
     src/textBlobs.cpp
     src/projectManager.cpp
+    src/headerLibrariesAdd.cpp
 )
 add_executable(${PROJECT_NAME} ${BIN_SOURCES})
 target_precompile_headers(${PROJECT_NAME} PRIVATE include/pch.h)
