@@ -92,7 +92,7 @@ void clean(WindowManager* wmp) {
 	}
 }
 
-void build(WindowManager* wmp) {
+void build(WindowManager* wmp, bool Rel) {
 	if (!ensure_project_root(wmp)) {
 		return;
 	}
@@ -103,10 +103,11 @@ void build(WindowManager* wmp) {
 	fflib::cd("build");
 #ifdef _WIN32
 	std::system("cmake.exe ..");
-	std::system("cmake.exe --build .");
+	if (Rel) std::system("cmake.exe --build .  --config Release");
+	else std::system("cmake.exe --build .");
 #else
-	std::system("cmake ..");
-	std::system("cmake --build .");
+	if (Rel) std::system("cmake --build . --config Release");
+	else std::system("cmake --build .");
 #endif
 	fflib::cddotdot();
 }

@@ -60,6 +60,7 @@ class projectManager : public Window {
     std::string projectName = "";
     projectType pt = projectType::binary;
     bool projectTypeBool = false;
+    bool Release = false;
     Label* projectLabel = nullptr;
     Label* projectTypeLabel = nullptr;
 public:
@@ -70,16 +71,18 @@ public:
         hbox.Add<Label>("Change project name ");
         hbox.Add<TextInput>(26, &projectName);
         projectTypeLabel = &vbox.Add<Label>("");
-        vbox.Add<Toggle>("Change project type", projectTypeBool);
-        vbox.Add<Separator>();
         auto& hbox2 = vbox.Add<HorizontalContainer>();
-        hbox2.Add<Button>("Init", [this]() { init(projectTypeBool, projectName, &wm); });
-        hbox2.Add<Button>("clean build folder", [this]() { clean(&wm); });
-        hbox2.Add<Button>("build", [this]() { build(&wm); });
-        hbox2.Add<Button>("run", [this]() { run(&wm); });
+        hbox2.Add<Toggle>("Change project type", projectTypeBool);
+        hbox2.Add<Toggle>("Release", Release);
+        vbox.Add<Separator>();
         auto& hbox3 = vbox.Add<HorizontalContainer>();
-        hbox3.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
-        hbox3.Add<Button>("Exit Citaidel", [this]() { wm.exit(0); });
+        hbox3.Add<Button>("Init", [this]() { init(projectTypeBool, projectName, &wm); });
+        hbox3.Add<Button>("clean build folder", [this]() { clean(&wm); });
+        hbox3.Add<Button>("build", [this]() { build(&wm, Release); });
+        hbox3.Add<Button>("run", [this]() { run(&wm); });
+        auto& hbox4 = vbox.Add<HorizontalContainer>();
+        hbox4.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
+        hbox4.Add<Button>("Exit Citaidel", [this]() { wm.exit(0); });
     }
 
     void Draw(std::ostream& buffer) override {
@@ -410,12 +413,45 @@ public:
     }
 };
 
+class CMakeLibraryAdd : public Window {
+    std::vector<std::string> text = {
+        "Vary simple library adder, just adds",
+        "find_package(name REQUIRED) and",
+        "target_link_libraries(${PROJECT_NAME} PRIVATE name::name)"
+    };
+    std::string libraryName = "";
+public:
+    CMakeLibraryAdd() : Window("CMake Library Add", 61, 13, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        vbox.Add<TextBox>(text);
+        vbox.Add<TextInput>(30, &libraryName);
+        vbox.Add<Button>("Add", [this]() {
+            if (!fflib::exists("CMakeLists.txt")) {
+                wm.Alert("No CMakeLists.txt in directory");
+                return;
+            }
+            if (fflib::cat("CMakeLists.txt").find("#CITAIDEL_LIBRARY_ANCHOR") != std::string::npos) {
+                fflib::append_at_point_file(
+                    "CMakeLists.txt",
+                    "#CITAIDEL_LIBRARY_ANCHOR",
+                    "\nfind_package(" + libraryName + " REQUIRED)\n"
+                    "target_link_libraries(${PROJECT_NAME} PRIVATE " + libraryName + "::" + libraryName + ")\n"
+                );
+            }
+            else {
+                wm.Alert("Could not find #CITAIDEL_LIBRARY_ANCHOR in CMakeLists.txt. Did not add as target.");
+            }
+            });
+    }
+};
+
 int main() {
     auto start = startmenu<StartMenuWindow>(&wm, winpal);
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
     start->AddItem<gitWindow>("Git Manager");
     start->AddItem<Files>("Files");
+    start->AddItem<CMakeLibraryAdd>("CMake Library Add");
     start->AddItem<headerLibrariesWindow>("Header Libraries Add");
     start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
