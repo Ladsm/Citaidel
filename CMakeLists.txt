@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BIN_SOURCES
     src/main.cpp
     #CGEN_ANCHOR
+    #CITAIDEL_ANCHOR
     src/git.cpp
     src/projectFileManager.cpp
     src/textBlobs.cpp

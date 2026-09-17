@@ -1,6 +1,9 @@
 #include "textBlobs.hpp"
 std::string make_binary(const std::string& project_name) {
-    return "cmake_minimum_required(VERSION 3.20)\n"
+    return "#\n"
+        "#Auto generated Citaidel CmakeLists.txt\n"
+        "#\n\n"
+        "cmake_minimum_required(VERSION 3.20)\n"
         "project(" + project_name + " VERSION 1.0 LANGUAGES CXX)\n"
         R"(
 set(CMAKE_CXX_STANDARD 23)
@@ -14,6 +17,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE include/pch.h)
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+#CITAIDEL_LIBRARY_ANCHOR
 if(WIN32)
     target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
     target_link_libraries(${PROJECT_NAME} PRIVATE user32 gdi32 shell32 advapi32)
@@ -25,7 +29,10 @@ endif()
 }
 
 std::string make_library(const std::string& library_name) {
-    return "cmake_minimum_required(VERSION 3.20)\n"
+    return "#\n"
+        "#Auto generated Citaidel CmakeLists.txt\n"
+        "#\n\n"
+        "cmake_minimum_required(VERSION 3.20)\n"
         "project(" + library_name + " VERSION 1.0 LANGUAGES CXX)\n"
         R"(
 set(CMAKE_CXX_STANDARD 23)
@@ -42,6 +49,7 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
+#CITAIDEL_LIBRARY_ANCHOR
 if(WIN32)
     target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
     target_link_libraries(${PROJECT_NAME} PUBLIC user32 gdi32 shell32 advapi32)
