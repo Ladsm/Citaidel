@@ -23,6 +23,7 @@ WindowPalette winpal = WindowPalette(
 );
 
 WindowManager wm("Citaidel", wmpal, winpal);
+std::string vcpkgPath = "";
 
 enum class projectType {
     binary,
@@ -78,7 +79,7 @@ public:
         auto& hbox3 = vbox.Add<HorizontalContainer>();
         hbox3.Add<Button>("Init", [this]() { init(projectTypeBool, projectName, &wm); });
         hbox3.Add<Button>("clean build folder", [this]() { clean(&wm); });
-        hbox3.Add<Button>("build", [this]() { build(&wm, Release); });
+        hbox3.Add<Button>("build", [this]() { build(&wm, Release, vcpkgPath); });
         hbox3.Add<Button>("run", [this]() { run(&wm); });
         auto& hbox4 = vbox.Add<HorizontalContainer>();
         hbox4.Add<Button>("Close", [this]() { wm.RemoveWindow(this); });
@@ -445,7 +446,27 @@ public:
     }
 };
 
+class VcpkgManager : public Window {
+    std::string tempPath = vcpkgPath;
+public:
+    VcpkgManager() : Window("Vcpkg Manager", 60, 11, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        vbox.Add<TextInput>(55, &tempPath);
+        vbox.Add<Button>("Update path", [this]() {
+            vcpkgPath = tempPath;
+            fflib::create_appdata_file("CITAIDEL_VCPKG_PATH.txt", vcpkgPath);
+            });
+        vbox.Add<Button>("Close", [this]() { 
+            wm.RemoveWindow(this); 
+            });
+    }
+};
+
 int main() {
+    vcpkgPath = fflib::read_appdata_file("CITAIDEL_VCPKG_PATH.txt");
+    if (vcpkgPath == "") {
+        fflib::create_appdata_file("CITAIDEL_VCPKG_PATH.txt", "");
+    }
     auto start = startmenu<StartMenuWindow>(&wm, winpal);
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
@@ -453,6 +474,7 @@ int main() {
     start->AddItem<Files>("Files");
     start->AddItem<CMakeLibraryAdd>("CMake Library Add");
     start->AddItem<headerLibrariesWindow>("Header Libraries Add");
+    start->AddItem<VcpkgManager>("Vcpkg Manager");
     start->AddItem("Terminal", &ShellWindow::Create);
     start->AddItem<textEditor>("Text Editor");
     start->AddItem<aboutWindow>("About");

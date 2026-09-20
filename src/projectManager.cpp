@@ -92,7 +92,7 @@ void clean(WindowManager* wmp) {
 	}
 }
 
-void build(WindowManager* wmp, bool Rel) {
+void build(WindowManager* wmp, bool Rel, std::string vcpkgpath) {
 	if (!ensure_project_root(wmp)) {
 		return;
 	}
@@ -102,15 +102,24 @@ void build(WindowManager* wmp, bool Rel) {
 	}
 	fflib::cd("build");
 #ifdef _WIN32
-	std::system("cmake.exe ..");
-	if (Rel) std::system("cmake.exe --build .  --config Release");
-	else std::system("cmake.exe --build .");
+	std::string cmake_exe = "cmake.exe";
 #else
-	if (Rel) std::system("cmake --build . --config Release");
-	else std::system("cmake --build .");
+	std::string cmake_exe = "cmake";
 #endif
+	std::string gen_cmd = cmake_exe + " ..";
+	if (!vcpkgpath.empty()) {
+		gen_cmd += " -DCMAKE_TOOLCHAIN_FILE=" + vcpkgpath;
+	}
+	std::system(gen_cmd.c_str());
+	std::string build_cmd = cmake_exe + " --build .";
+	if (Rel) {
+		build_cmd += " --config Release";
+	}
+	std::system(build_cmd.c_str());
+
 	fflib::cddotdot();
 }
+
 
 void run(WindowManager* wmp) {
 	if (!ensure_project_root(wmp)) {
