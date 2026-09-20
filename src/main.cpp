@@ -5,8 +5,10 @@
 #include "headerLibrariesAdd.hpp"
 #include "git.hpp"
 
-#define CITAIDEL_VERSION 1.1.0
-#define CITAIDEL_VERSION_TEXT "1.1.0"
+#define CITAIDEL_VERSION_MAJOR 1
+#define CITAIDEL_VERSION_MINOR 2
+#define CITAIDEL_VERSION_PATCH 0
+#define CITAIDEL_VERSION_TEXT "1.2.0"
 
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
@@ -41,7 +43,7 @@ class aboutWindow : public Window {
     std::vector<std::string> info = {
         "C/C++ IDE built in Lad-in-the-Window.",
         "Uses CMake to build and has Git",
-        "intergrateion."
+        "integration."
     };
 public:
     aboutWindow() : Window("About", 41, 21, winpal) {
@@ -273,7 +275,7 @@ public:
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Label>("Filename: ");
         hbox.Add<TextInput>(20, &filename);
-        vbox.Add<Label>("(dont add file extention)");
+        vbox.Add<Label>("(Don't add file extension)");
         auto& hbox2 = vbox.Add<HorizontalContainer>();
         hbox2.Add<Toggle>("is header", isHeader);
         hbox2.Add<Toggle>("is header and cpp", isBoth);
@@ -303,8 +305,8 @@ class gitWindow : public Window {
     }
 
     void VCGitSet() {
-        VCGit->children.clear();
         textInput = nullptr;
+        VCGit->children.clear();
 
         if (!inGitDirectory()) {
             VCGit->Add<Button>("Initialize git repository", [this]() {
@@ -416,7 +418,7 @@ public:
 
 class CMakeLibraryAdd : public Window {
     std::vector<std::string> text = {
-        "Vary simple library adder, just adds",
+        "Very simple library adder, just adds",
         "find_package(name REQUIRED) and",
         "target_link_libraries(${PROJECT_NAME} PRIVATE name::name)"
     };
