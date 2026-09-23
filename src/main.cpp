@@ -464,6 +464,26 @@ public:
     }
 };
 
+class gitignoreManager : public Window {
+    std::string gitignoreAdd = "";
+public:
+    gitignoreManager() : Window("gitignore Manager", 46, 9, winpal) {
+        auto& vbox = Add<VerticalContainer>(2, 2, 1);
+        vbox.Add<Label>("Appends text at end of gitignore");
+        auto& hbox = vbox.Add<HorizontalContainer>();
+        hbox.Add<TextInput>(30, &gitignoreAdd);
+        hbox.Add<Button>("Append", [this]() {
+            if (!fflib::exists(".gitignore")) {
+                wm.Alert("Cannot find .gitignore");
+                return;
+            }
+            else {
+                fflib::append_file(".gitignore", gitignoreAdd);
+            }
+            });
+    }
+};
+
 int main() {
     vcpkgPath = fflib::read_appdata_file("CITAIDEL_VCPKG_PATH.txt");
     if (vcpkgPath == "") {
@@ -473,6 +493,7 @@ int main() {
     start->AddItem<projectManager>("Project Manager");
     start->AddItem<projectFileManager>("Project File Manager");
     start->AddItem<gitWindow>("Git Manager");
+    start->AddItem<gitignoreManager>("gitignore Manager");
     start->AddItem<Files>("Files");
     start->AddItem<CMakeLibraryAdd>("CMake Library Add");
     start->AddItem<headerLibrariesWindow>("Header Libraries Add");
