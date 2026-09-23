@@ -244,7 +244,7 @@ namespace mktui {
         Mouse_Right_Up
     };
 #ifndef _WIN32
-    int getch() {
+    inline int getch() {
         return getchar();
     }
 #endif
@@ -252,36 +252,8 @@ namespace mktui {
     inline int g_mouseY = 0;
     inline int get_MouseX() { return g_mouseX; }
     inline int get_MouseY() { return g_mouseY; }
-    inline Input_Type translate_ascii_key(int ch) {
-        if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
-        ch = std::tolower(ch);
-        switch (ch) {
-        case '\t': return Input_Type::Tab;
-        case '\r': case '\n': return Input_Type::Enter;
-        case ' ': return Input_Type::Space;
-        case 27: return Input_Type::Escape;
-        case 'q': return Input_Type::Q; case 'w': return Input_Type::W; case 'e': return Input_Type::E;
-        case 'r': return Input_Type::R; case 't': return Input_Type::T; case 'y': return Input_Type::Y;
-        case 'u': return Input_Type::U; case 'i': return Input_Type::I; case 'o': return Input_Type::O;
-        case 'p': return Input_Type::P; case 'a': return Input_Type::A; case 's': return Input_Type::S;
-        case 'd': return Input_Type::D; case 'f': return Input_Type::F; case 'g': return Input_Type::G;
-        case 'h': return Input_Type::H; case 'j': return Input_Type::J; case 'k': return Input_Type::K;
-        case 'l': return Input_Type::L; case 'z': return Input_Type::Z; case 'x': return Input_Type::X;
-        case 'c': return Input_Type::C; case 'v': return Input_Type::V; case 'b': return Input_Type::B;
-        case 'n': return Input_Type::N; case 'm': return Input_Type::M;
-        default: return Input_Type::None;
-        }
-    }
-#if defined(_WIN32)
-    inline int read_Key() {
-        int ch = _getch();
-        if (ch == 0 || ch == 224) {
-            int ch2 = _getch();
-            return 1000 + ch2;
-        }
-        return ch;
-    }
     inline Input_Type Get_Input() {
+#if defined(_WIN32)
         static bool consoleInitialized = false;
         static DWORD originalMode = 0;
         HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -296,23 +268,97 @@ namespace mktui {
         }
         INPUT_RECORD ir;
         DWORD read = 0;
-        while (ReadConsoleInput(hIn, &ir, 1, &read)) {
+        static DWORD prevMouseButtons = 0;
+        while (true) {
+            if (!ReadConsoleInput(hIn, &ir, 1, &read)) {
+                int ch = _getch();
+                if (ch == 9) return Input_Type::Tab;
+                if (ch == 13) return Input_Type::Enter;
+                if (ch == ' ') return Input_Type::Space;
+                if (ch == 27) return Input_Type::Escape;
+                if (ch == 0 || ch == 224) {
+                    int ex = _getch();
+                    if (ex >= 59 && ex <= 68) return static_cast<Input_Type>((int)Input_Type::F1 + (ex - 59));
+                    if (ex == 133) return Input_Type::F11;
+                    if (ex == 134) return Input_Type::F12;
+                }
+                if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
+                switch (ch) {
+                case 'q': case 'Q': return Input_Type::Q;
+                case 'w': case 'W': return Input_Type::W;
+                case 'e': case 'E': return Input_Type::E;
+                case 'r': case 'R': return Input_Type::R;
+                case 't': case 'T': return Input_Type::T;
+                case 'y': case 'Y': return Input_Type::Y;
+                case 'u': case 'U': return Input_Type::U;
+                case 'i': case 'I': return Input_Type::I;
+                case 'o': case 'O': return Input_Type::O;
+                case 'p': case 'P': return Input_Type::P;
+                case 'a': case 'A': return Input_Type::A;
+                case 's': case 'S': return Input_Type::S;
+                case 'd': case 'D': return Input_Type::D;
+                case 'f': case 'F': return Input_Type::F;
+                case 'g': case 'G': return Input_Type::G;
+                case 'h': case 'H': return Input_Type::H;
+                case 'j': case 'J': return Input_Type::J;
+                case 'k': case 'K': return Input_Type::K;
+                case 'l': case 'L': return Input_Type::L;
+                case 'z': case 'Z': return Input_Type::Z;
+                case 'x': case 'X': return Input_Type::X;
+                case 'c': case 'C': return Input_Type::C;
+                case 'v': case 'V': return Input_Type::V;
+                case 'b': case 'B': return Input_Type::B;
+                case 'n': case 'N': return Input_Type::N;
+                case 'm': case 'M': return Input_Type::M;
+                default: return Input_Type::None;
+                }
+            }
             if (ir.EventType == KEY_EVENT) {
                 auto& ke = ir.Event.KeyEvent;
                 if (!ke.bKeyDown) continue;
+                if (ke.wVirtualKeyCode == VK_TAB) return Input_Type::Tab;
                 if (ke.wVirtualKeyCode >= VK_F1 && ke.wVirtualKeyCode <= VK_F12) {
                     return static_cast<Input_Type>((int)Input_Type::F1 + (ke.wVirtualKeyCode - VK_F1));
                 }
+                char ch = (char)ke.uChar.AsciiChar;
+                if (ch == 13) return Input_Type::Enter;
+                if (ch == ' ') return Input_Type::Space;
+                if (ch == 27) return Input_Type::Escape;
                 switch (ke.wVirtualKeyCode) {
-                case VK_UP: return Input_Type::Arrow_Up;
-                case VK_DOWN: return Input_Type::Arrow_Down;
-                case VK_LEFT: return Input_Type::Arrow_Left;
+                case VK_UP:    return Input_Type::Arrow_Up;
+                case VK_DOWN:  return Input_Type::Arrow_Down;
+                case VK_LEFT:  return Input_Type::Arrow_Left;
                 case VK_RIGHT: return Input_Type::Arrow_Right;
                 }
-                char ch = (char)ke.uChar.AsciiChar;
-                if (ch) {
-                    Input_Type t = translate_ascii_key(ch);
-                    if (t != Input_Type::None) return t;
+                if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
+                switch (ch) {
+                case 'q': case 'Q': return Input_Type::Q;
+                case 'w': case 'W': return Input_Type::W;
+                case 'e': case 'E': return Input_Type::E;
+                case 'r': case 'R': return Input_Type::R;
+                case 't': case 'T': return Input_Type::T;
+                case 'y': case 'Y': return Input_Type::Y;
+                case 'u': case 'U': return Input_Type::U;
+                case 'i': case 'I': return Input_Type::I;
+                case 'o': case 'O': return Input_Type::O;
+                case 'p': case 'P': return Input_Type::P;
+                case 'a': case 'A': return Input_Type::A;
+                case 's': case 'S': return Input_Type::S;
+                case 'd': case 'D': return Input_Type::D;
+                case 'f': case 'F': return Input_Type::F;
+                case 'g': case 'G': return Input_Type::G;
+                case 'h': case 'H': return Input_Type::H;
+                case 'j': case 'J': return Input_Type::J;
+                case 'k': case 'K': return Input_Type::K;
+                case 'l': case 'L': return Input_Type::L;
+                case 'z': case 'Z': return Input_Type::Z;
+                case 'x': case 'X': return Input_Type::X;
+                case 'c': case 'C': return Input_Type::C;
+                case 'v': case 'V': return Input_Type::V;
+                case 'b': case 'B': return Input_Type::B;
+                case 'n': case 'N': return Input_Type::N;
+                case 'm': case 'M': return Input_Type::M;
+                default: return Input_Type::None;
                 }
             }
             else if (ir.EventType == MOUSE_EVENT) {
@@ -320,7 +366,6 @@ namespace mktui {
                 g_mouseX = me.dwMousePosition.X;
                 g_mouseY = me.dwMousePosition.Y;
                 DWORD btns = me.dwButtonState;
-                static DWORD prevMouseButtons = 0;
                 if (me.dwEventFlags == MOUSE_MOVED) {
                     prevMouseButtons = btns;
                     return Input_Type::Mouse_Move;
@@ -334,10 +379,114 @@ namespace mktui {
                 return Input_Type::Mouse_Move;
             }
         }
+#else
+        static bool consoleInitialized = false;
+        if (!consoleInitialized) {
+            tcgetattr(STDIN_FILENO, &originalTermios);
+            struct termios raw = originalTermios;
+            raw.c_lflag &= ~(ICANON | ECHO);
+            raw.c_iflag &= ~(IXON | ICRNL);
+            tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+            std::cout << "\033[?1002h\033[?1006h" << std::flush;
+            consoleInitialized = true;
+        }
+        int ch = getch();
+        if (ch == 9) return Input_Type::Tab;
+        if (ch == 27) {
+            int n1 = getch();
+            if (n1 == '[') {
+                int n2 = getch();
+                if (n2 == '<') {
+                    int cb = 0, cx = 0, cy = 0;
+                    int c;
+                    while ((c = getch()) >= '0' && c <= '9') { cb = cb * 10 + (c - '0'); }
+                    if (c == ';') {
+                        while ((c = getch()) >= '0' && c <= '9') { cx = cx * 10 + (c - '0'); }
+                        if (c == ';') {
+                            while ((c = getch()) >= '0' && c <= '9') { cy = cy * 10 + (c - '0'); }
+                            if (c == 'M' || c == 'm') {
+                                g_mouseX = cx > 0 ? cx - 1 : 0;
+                                g_mouseY = cy > 0 ? cy - 1 : 0;
+                                bool isMotion = (cb & 32) != 0;
+                                int button = cb & 0b11;
+                                if (isMotion) return Input_Type::Mouse_Move;
+                                if (c == 'M') {
+                                    if (button == 0) return Input_Type::Mouse_Left_Down;
+                                    return Input_Type::Mouse_Move;
+                                }
+                                else {
+                                    if (button == 0 || button == 3) return Input_Type::Mouse_Left_Up;
+                                    return Input_Type::Mouse_Move;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (n2 == 'A') return Input_Type::Arrow_Up;
+                    if (n2 == 'B') return Input_Type::Arrow_Down;
+                    if (n2 == 'C') return Input_Type::Arrow_Right;
+                    if (n2 == 'D') return Input_Type::Arrow_Left;
+                    if (n2 >= '0' && n2 <= '9') {
+                        int num = n2 - '0';
+                        int next;
+                        while ((next = getch()) >= '0' && next <= '9') num = num * 10 + (next - '0');
+                        if (num == 15) return Input_Type::F5;
+                        if (num == 17) return Input_Type::F6;
+                        if (num == 18) return Input_Type::F7;
+                        if (num == 19) return Input_Type::F8;
+                        if (num == 20) return Input_Type::F9;
+                        if (num == 21) return Input_Type::F10;
+                        if (num == 23) return Input_Type::F11;
+                        if (num == 24) return Input_Type::F12;
+                    }
+                }
+            }
+            else if (n1 == 'O') {
+                int n2 = getch();
+                if (n2 == 'P') return Input_Type::F1;
+                if (n2 == 'Q') return Input_Type::F2;
+                if (n2 == 'R') return Input_Type::F3;
+                if (n2 == 'S') return Input_Type::F4;
+            }
+            return Input_Type::Escape;
+        }
+        if (ch == 10 || ch == 13) return Input_Type::Enter;
+        if (ch == ' ') return Input_Type::Space;
+        if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
+        switch (ch) {
+        case 'q': case 'Q': return Input_Type::Q;
+        case 'w': case 'W': return Input_Type::W;
+        case 'e': case 'E': return Input_Type::E;
+        case 'r': case 'R': return Input_Type::R;
+        case 't': case 'T': return Input_Type::T;
+        case 'y': case 'Y': return Input_Type::Y;
+        case 'u': case 'U': return Input_Type::U;
+        case 'i': case 'I': return Input_Type::I;
+        case 'o': case 'O': return Input_Type::O;
+        case 'p': case 'P': return Input_Type::P;
+        case 'a': case 'A': return Input_Type::A;
+        case 's': case 'S': return Input_Type::S;
+        case 'd': case 'D': return Input_Type::D;
+        case 'f': case 'F': return Input_Type::F;
+        case 'g': case 'G': return Input_Type::G;
+        case 'h': case 'H': return Input_Type::H;
+        case 'j': case 'J': return Input_Type::J;
+        case 'k': case 'K': return Input_Type::K;
+        case 'l': case 'L': return Input_Type::L;
+        case 'z': case 'Z': return Input_Type::Z;
+        case 'x': case 'X': return Input_Type::X;
+        case 'c': case 'C': return Input_Type::C;
+        case 'v': case 'V': return Input_Type::V;
+        case 'b': case 'B': return Input_Type::B;
+        case 'n': case 'N': return Input_Type::N;
+        case 'm': case 'M': return Input_Type::M;
+        }
         return Input_Type::None;
+#endif
     }
-
     inline Input_Type Get_Input_Nonblocking() {
+#if defined(_WIN32)
         static bool consoleInitialized = false;
         static DWORD originalMode = 0;
         HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -345,7 +494,7 @@ namespace mktui {
             if (GetConsoleMode(hIn, &originalMode)) {
                 DWORD mode = originalMode;
                 mode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
-                mode |= ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+                mode |= ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS;
                 SetConsoleMode(hIn, mode);
             }
             consoleInitialized = true;
@@ -356,32 +505,62 @@ namespace mktui {
         }
         INPUT_RECORD ir;
         DWORD read = 0;
+        static DWORD prevMouseButtons = 0;
         if (!ReadConsoleInput(hIn, &ir, 1, &read)) return Input_Type::None;
+
         if (ir.EventType == KEY_EVENT) {
             auto& ke = ir.Event.KeyEvent;
             if (!ke.bKeyDown) return Input_Type::None;
+
+            if (ke.wVirtualKeyCode == VK_TAB) return Input_Type::Tab;
             if (ke.wVirtualKeyCode >= VK_F1 && ke.wVirtualKeyCode <= VK_F12) {
                 return static_cast<Input_Type>((int)Input_Type::F1 + (ke.wVirtualKeyCode - VK_F1));
             }
+            char ch = (char)ke.uChar.AsciiChar;
+            if (ch == 13) return Input_Type::Enter;
+            if (ch == ' ') return Input_Type::Space;
+            if (ch == 27) return Input_Type::Escape;
             switch (ke.wVirtualKeyCode) {
-            case VK_UP: return Input_Type::Arrow_Up;
-            case VK_DOWN: return Input_Type::Arrow_Down;
-            case VK_LEFT: return Input_Type::Arrow_Left;
+            case VK_UP:    return Input_Type::Arrow_Up;
+            case VK_DOWN:  return Input_Type::Arrow_Down;
+            case VK_LEFT:  return Input_Type::Arrow_Left;
             case VK_RIGHT: return Input_Type::Arrow_Right;
             }
-            char ch = (char)ke.uChar.AsciiChar;
-            if (ch) {
-                Input_Type t = translate_ascii_key(ch);
-                if (t != Input_Type::None) return t;
+            if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
+            switch (tolower(ch)) {
+            case 'q': case 'Q': return Input_Type::Q;
+            case 'w': case 'W': return Input_Type::W;
+            case 'e': case 'E': return Input_Type::E;
+            case 'r': case 'R': return Input_Type::R;
+            case 't': case 'T': return Input_Type::T;
+            case 'y': case 'Y': return Input_Type::Y;
+            case 'u': case 'U': return Input_Type::U;
+            case 'i': case 'I': return Input_Type::I;
+            case 'o': case 'O': return Input_Type::O;
+            case 'p': case 'P': return Input_Type::P;
+            case 'a': case 'A': return Input_Type::A;
+            case 's': case 'S': return Input_Type::S;
+            case 'd': case 'D': return Input_Type::D;
+            case 'f': case 'F': return Input_Type::F;
+            case 'g': case 'G': return Input_Type::G;
+            case 'h': case 'H': return Input_Type::H;
+            case 'j': case 'J': return Input_Type::J;
+            case 'k': case 'K': return Input_Type::K;
+            case 'l': case 'L': return Input_Type::L;
+            case 'z': case 'Z': return Input_Type::Z;
+            case 'x': case 'X': return Input_Type::X;
+            case 'c': case 'C': return Input_Type::C;
+            case 'v': case 'V': return Input_Type::V;
+            case 'b': case 'B': return Input_Type::B;
+            case 'n': case 'N': return Input_Type::N;
+            case 'm': case 'M': return Input_Type::M;
             }
-            return Input_Type::None;
         }
         else if (ir.EventType == MOUSE_EVENT) {
             auto& me = ir.Event.MouseEvent;
             g_mouseX = me.dwMousePosition.X;
             g_mouseY = me.dwMousePosition.Y;
             DWORD btns = me.dwButtonState;
-            static DWORD prevMouseButtons = 0;
             if (me.dwEventFlags == MOUSE_MOVED) {
                 prevMouseButtons = btns;
                 return Input_Type::Mouse_Move;
@@ -392,100 +571,12 @@ namespace mktui {
             prevMouseButtons = btns;
             if (!prevLeft && curLeft) return Input_Type::Mouse_Left_Down;
             if (prevLeft && !curLeft) return Input_Type::Mouse_Left_Up;
+
             return Input_Type::Mouse_Move;
         }
         return Input_Type::None;
-    }
+
 #else
-    inline int read_with_timeout(int timeoutMs = 0) {
-        struct pollfd pfd = { STDIN_FILENO, POLLIN, 0 };
-        int rv = poll(&pfd, 1, timeoutMs);
-        if (rv <= 0) return -1;
-        return getchar();
-    }
-    inline Input_Type Get_Input() {
-        static bool consoleInitialized = false;
-        if (!consoleInitialized) {
-            tcgetattr(STDIN_FILENO, &originalTermios);
-            struct termios raw = originalTermios;
-            raw.c_lflag &= ~(ICANON | ECHO);
-            raw.c_iflag &= ~(IXON | ICRNL);
-            tcsetattr(STDIN_FILENO, TCSANOW, &raw);
-            std::cout << "\033[?1002h\033[?1006h" << std::flush;
-            consoleInitialized = true;
-        }
-        int ch = read_with_timeout(-1);
-        if (ch == -1) return Input_Type::None;
-        if (ch == 27) {
-            int n1 = read_with_timeout(20);
-            if (n1 == -1) return Input_Type::Escape;
-            if (n1 == '[') {
-                int n2 = read_with_timeout(20);
-                if (n2 == '<') {
-                    int cb = 0, cx = 0, cy = 0;
-                    int c;
-                    while ((c = read_with_timeout(20)) >= '0' && c <= '9') cb = cb * 10 + (c - '0');
-                    if (c == ';') {
-                        while ((c = read_with_timeout(20)) >= '0' && c <= '9') cx = cx * 10 + (c - '0');
-                        if (c == ';') {
-                            while ((c = read_with_timeout(20)) >= '0' && c <= '9') cy = cy * 10 + (c - '0');
-                            int term = read_with_timeout(20);
-                            if (term == 'M' || term == 'm') {
-                                g_mouseX = cx > 0 ? cx - 1 : 0;
-                                g_mouseY = cy > 0 ? cy - 1 : 0;
-                                bool isMotion = (cb & 32) != 0;
-                                int button = cb & 0b11;
-                                if (isMotion) return Input_Type::Mouse_Move;
-                                if (term == 'M') {
-                                    if (button == 0) return Input_Type::Mouse_Left_Down;
-                                    return Input_Type::Mouse_Move;
-                                }
-                                else {
-                                    if (button == 0 || button == 3) return Input_Type::Mouse_Left_Up;
-                                    return Input_Type::Mouse_Move;
-                                }
-                            }
-                        }
-                    }
-                    return Input_Type::None;
-                }
-                else {
-                    if (n2 == 'A') return Input_Type::Arrow_Up;
-                    if (n2 == 'B') return Input_Type::Arrow_Down;
-                    if (n2 == 'C') return Input_Type::Arrow_Right;
-                    if (n2 == 'D') return Input_Type::Arrow_Left;
-                    if (n2 >= '0' && n2 <= '9') {
-                        int num = n2 - '0';
-                        int next;
-                        while ((next = read_with_timeout(20)) >= '0' && next <= '9') num = num * 10 + (next - '0');
-                        switch (num) {
-                        case 15: return Input_Type::F5;
-                        case 17: return Input_Type::F6;
-                        case 18: return Input_Type::F7;
-                        case 19: return Input_Type::F8;
-                        case 20: return Input_Type::F9;
-                        case 21: return Input_Type::F10;
-                        case 23: return Input_Type::F11;
-                        case 24: return Input_Type::F12;
-                        default: return Input_Type::None;
-                        }
-                    }
-                    return Input_Type::None;
-                }
-            }
-            else if (n1 == 'O') {
-                int n2 = read_with_timeout(20);
-                if (n2 == 'P') return Input_Type::F1;
-                if (n2 == 'Q') return Input_Type::F2;
-                if (n2 == 'R') return Input_Type::F3;
-                if (n2 == 'S') return Input_Type::F4;
-                return Input_Type::None;
-            }
-            return Input_Type::Escape;
-        }
-        return translate_ascii_key(ch);
-    }
-    inline Input_Type Get_Input_Nonblocking() {
         static bool consoleInitialized = false;
         if (!consoleInitialized) {
             tcgetattr(STDIN_FILENO, &originalTermios);
@@ -497,42 +588,35 @@ namespace mktui {
             consoleInitialized = true;
         }
         struct pollfd pfd = { STDIN_FILENO, POLLIN, 0 };
-        int rv = poll(&pfd, 1, 0);
-        if (rv <= 0) return Input_Type::None;
-        int ch = read_with_timeout(5);
-        if (ch == -1) return Input_Type::None;
+        if (poll(&pfd, 1, 0) <= 0) {
+            return Input_Type::None;
+        }
+        int ch = getch();
+        if (ch == 9) return Input_Type::Tab;
         if (ch == 27) {
-            int n1 = read_with_timeout(1);
-            if (n1 == -1) return Input_Type::Escape;
+            struct pollfd seq_pfd = { STDIN_FILENO, POLLIN, 0 };
+            if (poll(&seq_pfd, 1, 50) <= 0) return Input_Type::Escape;
+            int n1 = getch();
             if (n1 == '[') {
-                int n2 = read_with_timeout(1);
+                int n2 = getch();
                 if (n2 == '<') {
                     int cb = 0, cx = 0, cy = 0;
                     int c;
-                    while ((c = read_with_timeout(1)) >= '0' && c <= '9') cb = cb * 10 + (c - '0');
+                    while ((c = getch()) >= '0' && c <= '9') { cb = cb * 10 + (c - '0'); }
                     if (c == ';') {
-                        while ((c = read_with_timeout(1)) >= '0' && c <= '9') cx = cx * 10 + (c - '0');
+                        while ((c = getch()) >= '0' && c <= '9') { cx = cx * 10 + (c - '0'); }
                         if (c == ';') {
-                            while ((c = read_with_timeout(1)) >= '0' && c <= '9') cy = cy * 10 + (c - '0');
-                            int term = read_with_timeout(1);
-                            if (term == 'M' || term == 'm') {
+                            while ((c = getch()) >= '0' && c <= '9') { cy = cy * 10 + (c - '0'); }
+                            if (c == 'M' || c == 'm') {
                                 g_mouseX = cx > 0 ? cx - 1 : 0;
                                 g_mouseY = cy > 0 ? cy - 1 : 0;
-                                bool isMotion = (cb & 32) != 0;
+                                if ((cb & 32) != 0) return Input_Type::Mouse_Move;
                                 int button = cb & 0b11;
-                                if (isMotion) return Input_Type::Mouse_Move;
-                                if (term == 'M') {
-                                    if (button == 0) return Input_Type::Mouse_Left_Down;
-                                    return Input_Type::Mouse_Move;
-                                }
-                                else {
-                                    if (button == 0 || button == 3) return Input_Type::Mouse_Left_Up;
-                                    return Input_Type::Mouse_Move;
-                                }
+                                if (c == 'M') return (button == 0) ? Input_Type::Mouse_Left_Down : Input_Type::Mouse_Move;
+                                return (button == 0 || button == 3) ? Input_Type::Mouse_Left_Up : Input_Type::Mouse_Move;
                             }
                         }
                     }
-                    return Input_Type::None;
                 }
                 else {
                     if (n2 == 'A') return Input_Type::Arrow_Up;
@@ -542,20 +626,18 @@ namespace mktui {
                     if (n2 >= '0' && n2 <= '9') {
                         int num = n2 - '0';
                         int next;
-                        while ((next = read_with_timeout(1)) >= '0' && next <= '9') num = num * 10 + (next - '0');
+                        while ((next = getch()) >= '0' && next <= '9') num = num * 10 + (next - '0');
                         switch (num) {
                         case 15: return Input_Type::F5; case 17: return Input_Type::F6;
                         case 18: return Input_Type::F7; case 19: return Input_Type::F8;
                         case 20: return Input_Type::F9; case 21: return Input_Type::F10;
                         case 23: return Input_Type::F11; case 24: return Input_Type::F12;
-                        default: return Input_Type::None;
                         }
                     }
-                    return Input_Type::None;
                 }
             }
             else if (n1 == 'O') {
-                int n2 = read_with_timeout(1);
+                int n2 = getch();
                 if (n2 == 'P') return Input_Type::F1;
                 if (n2 == 'Q') return Input_Type::F2;
                 if (n2 == 'R') return Input_Type::F3;
@@ -563,12 +645,49 @@ namespace mktui {
             }
             return Input_Type::Escape;
         }
-        return translate_ascii_key(ch);
-    }
+        if (ch == 10 || ch == 13) return Input_Type::Enter;
+        if (ch == ' ') return Input_Type::Space;
+        if (ch >= '0' && ch <= '9') return static_cast<Input_Type>(static_cast<int>(Input_Type::Num_0) + (ch - '0'));
+        switch (tolower(ch)) {
+        case 'q': case 'Q': return Input_Type::Q;
+        case 'w': case 'W': return Input_Type::W;
+        case 'e': case 'E': return Input_Type::E;
+        case 'r': case 'R': return Input_Type::R;
+        case 't': case 'T': return Input_Type::T;
+        case 'y': case 'Y': return Input_Type::Y;
+        case 'u': case 'U': return Input_Type::U;
+        case 'i': case 'I': return Input_Type::I;
+        case 'o': case 'O': return Input_Type::O;
+        case 'p': case 'P': return Input_Type::P;
+        case 'a': case 'A': return Input_Type::A;
+        case 's': case 'S': return Input_Type::S;
+        case 'd': case 'D': return Input_Type::D;
+        case 'f': case 'F': return Input_Type::F;
+        case 'g': case 'G': return Input_Type::G;
+        case 'h': case 'H': return Input_Type::H;
+        case 'j': case 'J': return Input_Type::J;
+        case 'k': case 'K': return Input_Type::K;
+        case 'l': case 'L': return Input_Type::L;
+        case 'z': case 'Z': return Input_Type::Z;
+        case 'x': case 'X': return Input_Type::X;
+        case 'c': case 'C': return Input_Type::C;
+        case 'v': case 'V': return Input_Type::V;
+        case 'b': case 'B': return Input_Type::B;
+        case 'n': case 'N': return Input_Type::N;
+        case 'm': case 'M': return Input_Type::M;
+        }
+        return Input_Type::None;
 #endif
-
+    }
 #if defined(_WIN32)
-    inline int read_Key();
+    inline int read_Key() {
+        int ch = _getch();
+        if (ch == 0 || ch == 224) {
+            int ch2 = _getch();
+            return 1000 + ch2;
+        }
+        return ch;
+    }
 #else
     inline int read_Key() {
         termios oldt, newt;
@@ -578,14 +697,8 @@ namespace mktui {
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
         int ch = getchar();
         if (ch == 27) {
-            int next = 0;
-            struct pollfd pfd = { STDIN_FILENO, POLLIN, 50 };
-            if (poll(&pfd, 1, 50) > 0) {
-                int n = getchar();
-                if (n == '[') {
-                    int m = getchar();
-                    ch = 1000 + m;
-                }
+            if (getchar() == '[') {
+                ch = 1000 + getchar();
             }
         }
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
