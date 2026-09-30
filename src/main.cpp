@@ -145,6 +145,7 @@ public:
 
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         textInput = &vbox.Add<LargeTextInput>(20, 56, &text, true);
+        textInput->createCppSnippets();
         vbox.Add<Separator>();
 
         auto& hbox = vbox.Add<HorizontalContainer>();
