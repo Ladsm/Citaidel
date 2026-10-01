@@ -77,7 +77,7 @@ public:
         auto& hbox2 = vbox.Add<HorizontalContainer>();
         hbox2.Add<Toggle>("Change project type", projectTypeBool);
         hbox2.Add<Toggle>("Release", Release);
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
         auto& hbox3 = vbox.Add<HorizontalContainer>();
         hbox3.Add<Button>("Init", [this]() { init(projectTypeBool, projectName, &wm); });
         hbox3.Add<Button>("clean build folder", [this]() { clean(&wm); });
@@ -146,7 +146,7 @@ public:
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         textInput = &vbox.Add<LargeTextInput>(20, 56, &text, true);
         textInput->createCppSnippets();
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
 
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Button>("Save", [this]() {
@@ -228,7 +228,7 @@ public:
                     needsRefresh = true;
                     });
                 row.Add<Button>("edit file", [fullPath]() {
-                    auto editor = mksharedWindow<textEditor>(fullPath);
+                    auto editor = makeSharedWindow<textEditor>(fullPath);
                     wm.AddWindow(editor);
                     });
                 row.Add<Label>("file       " + entryName);
@@ -239,7 +239,7 @@ public:
     Files() : Window("Files", 75, 30, winpal) {
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         PathLabel = &vbox.Add<Label>("");
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
         fileListContainer = &vbox.Add<VerticalContainer>();
         fileList();
     }
@@ -280,11 +280,11 @@ public:
         auto& hbox2 = vbox.Add<HorizontalContainer>();
         hbox2.Add<Toggle>("is header", isHeader);
         hbox2.Add<Toggle>("is header and cpp", isBoth);
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
         vbox.Add<Button>("Add", [this]() {
             fileAdd(&wm, filename, isHeader, isBoth);
             });
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
         vbox.Add<Button>("Remove", [this]() {
             fileRemove(&wm, filename, isHeader, isBoth);
             });
@@ -406,7 +406,7 @@ public:
     headerLibrariesWindow() : Window("Header Libraries Add", 50, 14, winpal) {
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(text);
-        vbox.Add<Separator>();
+        vbox.Add<HorizontalSeparator>();
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Button>("mktui.h", [this](){
         		createMktui(&wm);
