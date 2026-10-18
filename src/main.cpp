@@ -7,8 +7,8 @@
 
 #define CITAIDEL_VERSION_MAJOR 1
 #define CITAIDEL_VERSION_MINOR 2
-#define CITAIDEL_VERSION_PATCH 0
-#define CITAIDEL_VERSION_TEXT "1.2.0"
+#define CITAIDEL_VERSION_PATCH 1
+#define CITAIDEL_VERSION_TEXT "1.2.1"
 
 WindowManagerPalette wmpal = WindowManagerPalette(
     "\033[38;2;255;255;255;48;2;0;0;0m",
@@ -47,6 +47,7 @@ class aboutWindow : public Window {
     };
 public:
     aboutWindow() : Window("About", 41, 21, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(cilogo);
         vbox.Add<TextBox>(info);
@@ -68,6 +69,7 @@ class projectManager : public Window {
     Label* projectTypeLabel = nullptr;
 public:
     projectManager() : Window("Project Manager", 56, 19, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         projectLabel = &vbox.Add<Label>("Project: ");
         auto& hbox = vbox.Add<HorizontalContainer>();
@@ -272,6 +274,7 @@ class projectFileManager : public Window {
     bool isBoth = false;
 public:
     projectFileManager() : Window("Project File Manager", 50, 19, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         auto& hbox = vbox.Add<HorizontalContainer>();
         hbox.Add<Label>("Filename: ");
@@ -404,6 +407,7 @@ class headerLibrariesWindow : public Window {
     };
 public:
     headerLibrariesWindow() : Window("Header Libraries Add", 50, 14, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(text);
         vbox.Add<HorizontalSeparator>();
@@ -426,6 +430,7 @@ class CMakeLibraryAdd : public Window {
     std::string libraryName = "";
 public:
     CMakeLibraryAdd() : Window("CMake Library Add", 61, 13, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextBox>(text);
         vbox.Add<TextInput>(30, &libraryName);
@@ -453,6 +458,7 @@ class VcpkgManager : public Window {
     std::string tempPath = vcpkgPath;
 public:
     VcpkgManager() : Window("Vcpkg Manager", 60, 11, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<TextInput>(55, &tempPath);
         vbox.Add<Button>("Update path", [this]() {
@@ -469,6 +475,7 @@ class gitignoreManager : public Window {
     std::string gitignoreAdd = "";
 public:
     gitignoreManager() : Window("gitignore Manager", 46, 9, winpal) {
+        resizeable = false;
         auto& vbox = Add<VerticalContainer>(2, 2, 1);
         vbox.Add<Label>("Appends text at end of gitignore");
         auto& hbox = vbox.Add<HorizontalContainer>();
